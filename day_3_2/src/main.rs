@@ -73,9 +73,25 @@ fn main() -> io::Result<()> {
         }
     }
 
-    let inch_count = claimed.values().filter(|&&x| x >= 2).count();
+    for claim in claims.iter() {
+        let points = claim.points();
+        let mut num_points = points.len();
+        for point in points {
+            let key = format!("{}x{}", point.x, point.y);
+            match claimed.get(&key) {
+                None => panic!("WTF?"),
+                Some(val) => {
+                    if *val >= 2 {
+                        num_points -= 1;
+                    }
+                }
+            }
+        }
 
-     println!("{}", inch_count);
+        if num_points == claim.points().len() {
+            println!("{}", claim.id);
+        }
+    }
     
     Ok(())
 }
