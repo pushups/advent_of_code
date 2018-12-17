@@ -99,18 +99,23 @@ fn debug(entries: &Vec<LogEntry>) {
     }
 }
 
+fn max_key_val(x: &HashMap<u32, u32>) -> (&u32, &u32) {
+    x.iter().max_by_key(|y| y.1).unwrap()
+}
+
 fn main() {
     let lines = read_file();
     let mut parsed_lines: Vec<LogEntry> = lines.iter().map(|x| parse_line(x)).collect();
     parsed_lines.sort_by(|a, b| a.timestamp.cmp(&b.timestamp));
     fix_ids(&mut parsed_lines);
-    //debug(&parsed_lines);
+
     let mut summaries: HashMap<String, Summary> = HashMap::new();
     for i in 0..(parsed_lines.len() - 1) {
         let a = parsed_lines[i].clone();
         let b = parsed_lines[i+1].clone();
+        let id = a.id.unwrap();
         if a.event == Event::FallsAsleep && b.event == Event::WakesUp {
-            let mut summary = summaries.entry(a.id.unwrap()).or_insert(Summary{total_time_asleep: 0, minutes_asleep: HashMap::new()});
+            let summary = summaries.entry(id.clone()).or_insert(Summary{total_time_asleep: 0, minutes_asleep: HashMap::new() });
             let time_asleep = b.timestamp.signed_duration_since(a.timestamp).num_minutes();
             summary.total_time_asleep += time_asleep;
             for min in a.minute..b.minute {
@@ -118,16 +123,8 @@ fn main() {
             }
         }
     }
-    let (id, guard) = summaries.iter().max_by_key(|(id, g)| g.total_time_asleep).unwrap();
-    let most_min = guard
-        .minutes_asleep
-        .iter()
-        .max_by_key(|x| x.1)
-        .unwrap();
 
-    let answer = id.parse::<u32>().unwrap() * most_min.0;
-    
-    println!("{:?}", guard);
-    println!("{:?}", most_min);
-    println!("Answer: {}", answer);
+    let (id, guard) = summaries.iter().max_by_key(|x| max_key_val(&x.1.minutes_asleep).1).unwrap();
+    let answer = id.parse::<u32>().unwrap() * max_key_val(&guard.minutes_asleep).0;
+    println!("{:?}", answer);
 }
