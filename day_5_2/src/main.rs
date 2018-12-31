@@ -12,25 +12,38 @@ fn read_file() -> Vec<String> {
 
 fn should_destroy(x: char, y: char ) -> bool {
     let has_uppercase = x.is_uppercase() ^ y.is_uppercase();
-    has_uppercase && x.to_lowercase().to_string() == y.to_lowercase().to_string()
+    has_uppercase && is_same(x, y)
+}
+
+fn is_same(x: char, y: char) -> bool {
+    x.to_lowercase().to_string() == y.to_lowercase().to_string()
 }
 
 fn main() {
     let lines = read_file();
     let mut input = lines[0].clone();
+    let chars = "abcdefghijklmnopqrstuvwxyz";
+    let mut lens = vec![];
 
-    let mut stack: Vec<char> = vec![];
-    for ch in input.chars() {
-        if let Some(ch2) = stack.pop() {
-            if should_destroy(ch, ch2) {
+    for dest in chars.chars() {
+        let mut stack: Vec<char> = vec![];
+        for ch in input.chars() {
+            if is_same(ch, dest) {
                 continue;
-            } else {
-                stack.push(ch2);
             }
+            if let Some(ch2) = stack.pop() {
+                if should_destroy(ch, ch2) {
+                    continue;
+                } else {
+                    stack.push(ch2);
+                }
+            }
+
+            stack.push(ch);
         }
 
-        stack.push(ch);
+        lens.push(stack.len());
     }
 
-    println!("{}", stack.len());
+    println!("{:?}", lens.iter().min());
 }
